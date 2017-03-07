@@ -44,7 +44,6 @@ class GameManager:
     def updateAlarm(self, currTime):
         if currTime - self.prevTime > timeLimit + allowance:
             self.over = True
-            print 'Exceeded Time Limit, Last Move took: ' + str(currTime - self.lastTime)
         else:
             while time.clock() - self.prevTime < timeLimit + allowance:
                 pass
