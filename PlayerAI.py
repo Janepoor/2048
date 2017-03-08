@@ -3,11 +3,10 @@
 # #coding:utf-8
 #jm4437  Jianpu Ma
 
-#####################################
-#####################################
+################################################
 
 
-import sys
+import sys,os,math
 from BaseAI import BaseAI
 from random import randint
 
@@ -20,71 +19,66 @@ class PlayerAI(BaseAI):
     def getMove(self, grid):
         return self.player(MIN_VALUE, MAX_VALUE, grid, depth_limit)[1]
 
-
     def player(self, alpha, beta, grid, depth):
-
-
         if depth == 0 or not grid.canMove():
             return [self.score(grid), None]
 
-        v = MIN_VALUE
+        value = MIN_VALUE
         nextstates = []
         nextmove = grid.getAvailableMoves()
         for action in nextmove:
             newGrid = grid.clone()
             newGrid.move(action)
-            temp = [newGrid, action]  # stores each new state and the corresponding move
-            nextstates.append(temp)
+            moveset = [newGrid, action]  # stores each new state and the corresponding move
+            nextstates.append(moveset)
 
-        for s in nextstates:
-            nextgrid=s[0]
-            vtmp = self.computer(alpha, beta, nextgrid, depth - 1)
+        for movetuple in nextstates:
+            nextgrid=movetuple[0]
+            child = self.computer(alpha, beta, nextgrid, depth - 1)
 
-            if vtmp > v:
-                v = vtmp
-                bestMove = s[1]
-            if v >= beta:
-                return [v, bestMove]
-
-            alpha = max(alpha, v)
-
-        return [v, bestMove]
+            if child > value:
+                value = child
+                bestMove = movetuple[1]
+            alpha = max(alpha, value)
+            if beta <= alpha:
+                return [value, bestMove]
+        return [value, bestMove]
 
     def computer(self, alpha, beta, grid, depth):
 
         if depth == 0 or not grid.canMove():
             return [self.score(grid), None]
 
-        v = MAX_VALUE
+        value = MAX_VALUE
         nextstates = []
         Emptycell = grid.getAvailableCells()
 
-        for p, q in Emptycell:
+        for x, y in Emptycell:
             newGrid = grid.clone()
 
             if randint(0,99) < 90: 
-                newGrid.map[p][q] = 2
+                newGrid.map[x][y] = 2
             else:
-                newGrid.map[p][q] = 4 
+                newGrid.map[x][y] = 4 
 
             nextstates.append(newGrid)
 
-        for m, n in Emptycell:
+        for x, y in Emptycell:
             newGrid = grid.clone()
             if randint(0,99) < 90: 
-                newGrid.map[m][n] = 2
+                newGrid.map[x][y] = 2
             else:
-                newGrid.map[m][n] = 4 
+                newGrid.map[x][y] = 4 
             nextstates.append(newGrid)
 
         for s in nextstates:
-            v = min(v, self.player(alpha, beta, s, depth - 1)[0])
+            value = min(value, self.player(alpha, beta, s, depth - 1)[0])
+            beta = min(beta, value)
+            
+            if beta <= alpha:
+                return value        
 
-            if v <= alpha:
-                return v
-            beta = min(beta, v)
-
-        return v
+        return value
 
 
 
@@ -97,14 +91,14 @@ class PlayerAI(BaseAI):
         emptyblock_score = len(grid.getAvailableCells())
 
     ##########################################################################################################
-    # Part II     The heurisic score for the snake, each weight according to the weight list by pow function
+    # Part II     The heurisic score for the tortuous route, each weight according to the weight list by pow function
     #########################################################################################################
 
         weight = []
         for i in xrange(16):
             weight.append(pow(0.125, i))
 
-        snakeorder=[grid.map[0][0], grid.map[0][1], grid.map[0][2], grid.map[0][3],
+        tortuous_order=[grid.map[0][0], grid.map[0][1], grid.map[0][2], grid.map[0][3],
                   grid.map[1][3], grid.map[1][2], grid.map[1][1], grid.map[1][0],
                   grid.map[2][0], grid.map[2][1], grid.map[2][2], grid.map[2][3],
                   grid.map[3][3], grid.map[3][2], grid.map[3][1], grid.map[3][0]]
@@ -112,26 +106,37 @@ class PlayerAI(BaseAI):
         score1=0
         for i in xrange(16):
             
-            score1+=snakeorder[i]*weight[i]
+            score1+=tortuous_order[i]*weight[i]
+        
+        maxtile= grid.getMaxTile()
 
-        if snakeorder[0] == grid.getMaxTile():  # award bonus for keeping max tile in corner
+        if tortuous_order[0] == maxtile:  # award bonus for keeping max tile in corner  1.25
             score1 *= 1.25
 
-        score = score1 + emptyblock_score
+        if tortuous_order[0] != maxtile: #penalty for moving max tile from corner   0.9
+            score1 *= 0.95
+
+
+    #####################################################################################
+    # Part III     The smoothness score for the tortuous route
+    #########################################################################################################
+        """smoothness_score=0
+        if tortuous_order[0] == maxtile:  
+            for i in xrange(3):
+                if tortuous_order[i+1]!=0:
+                    if (tortuous_order[i]/tortuous_order[i+1]== 2 ):
+                        smoothness_score+= 0.01"""
+
+
+
+    #####################################################################################
+    # total score
+    #########################################################################################################
+        score = score1 + emptyblock_score #+ smoothness_score
 
         return score
 
-# measures how smooth the grid is (as if the values of the pieces were interpreted as elevations). Sums of the pairwise differencex
-# between neighboring tiles (in log space, so it represents the  number of merges that need to happen before they can merge).
 
-    """def smoothness(self,grid):
-        smoothness_score=0
-        current_size = grid.size
-
-        for i in xrange(0, current_size):
-            for j in xrange(0, current_size):
-                if grid.map[i][j] != 0:
-                    value=math.log(grid.map[i][j],2)"""
 
 
 

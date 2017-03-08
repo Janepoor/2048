@@ -1,13 +1,4 @@
 1024
-512
-512
-Player's Turn:
-Player's Turn:
-Player's Turn:
-Player's Turn:
-Player's Turn:
-Player's Turn:
-Player's Turn:
 1024
 512
 512
@@ -36,3 +27,4 @@ Player's Turn:
 1024
 1024
 1024
+512
